@@ -1,42 +1,16 @@
-// sketch.js - purpose and description here
-
-// Here is how you might set up an OOP p5.js project
-// Note that p5.js looks for a file called sketch.js
-
-// Constants - User-servicable parts
-
-// Globals
-let canvasContainer;
-var centerHorz, centerVert;
-
-
 let stars = [];
 let spaceJunk = [];
 let numStars = 100;    // Balanced star count
 let junkSpawnRate = 5; // Higher means less frequent
 let planets = [];
-let numPlanets = 2;
+let numPlanets = 5;
 
 // We'll use an offscreen buffer for color-picking.
 let pickBuffer;
 
-function resizeScreen() {
-  centerHorz = canvasContainer.width() / 2;
-  centerVert = canvasContainer.height() / 2;
-  console.log("Resizing...");
-  resizeCanvas(canvasContainer.width(), canvasContainer.height());
-}
-
 function setup() {
-  canvasContainer = $("#canvas-container");
-  let canvas = createCanvas(canvasContainer.width(), canvasContainer.height(), WEBGL);
-  canvas.parent("canvas-container");
-
-  $(window).resize(function() {
-    resizeScreen();
-  });
-  resizeScreen();
-
+  createCanvas(windowWidth, windowHeight, WEBGL);
+  // Create a matching offscreen buffer in WEBGL mode
   pickBuffer = createGraphics(width, height, WEBGL);
 
   // (Optional) force pickBuffer to use pixelDensity(1) 
@@ -85,6 +59,9 @@ function draw() {
       spaceJunk.splice(i, 1);
     }
   }
+  resetMatrix();
+  setAttributes('depth', false);
+  rect(-width/64,height/2.5, 70, 70)
 }
 
 // ----------------------------------------------------
@@ -339,3 +316,14 @@ function getPaletteColor(t, palette1, palette2, palette3) {
     return lerpColor(palette2, palette3, (t - 0.5) * 2);
   }
 }
+
+
+
+
+
+
+
+
+
+
+
