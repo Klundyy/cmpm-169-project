@@ -3,7 +3,7 @@ let spaceJunk = [];
 let numStars = 100;    // Balanced star count
 let junkSpawnRate = 5; // Higher means less frequent
 let planets = [];
-let numPlanets = 5;
+let numPlanets = 2;
 
 // We'll use an offscreen buffer for color-picking.
 let pickBuffer;
@@ -159,9 +159,9 @@ class Planet {
   reset() {
     this.x = random(-width, width);
     this.y = random(-height, height);
-    this.z = random(0, 3000);
-    this.speed = map(this.z, 0, 3000, 20, 5);
-    this.baseSize = random(1, 4);
+    this.z = random(-7000, -8000);
+    this.speed = map(this.z, -7000, -8000, 20, 5);
+    this.baseSize = random(1, 4) * 150;
     this.palette1 = color(random(255), random(255), random(255));
     this.palette2 = color(random(255), random(255), random(255));
     this.palette3 = color(random(255), random(255), random(255));
@@ -169,9 +169,10 @@ class Planet {
 
   update() {
     this.z += this.speed;
+
     if (this.z > 2000) {
       this.reset();
-      this.z = 0;
+      //this.z = 0;
     }
   }
 
@@ -181,7 +182,7 @@ class Planet {
     let size = map(this.z, 0, 2000, this.baseSize * 2, this.baseSize * 0.5);
     let alpha = map(this.z, 0, 2000, 255, 50);
     noStroke();
-    drawPlanet(this.palette1, this.palette2, this.palette3);
+    drawPlanet(this);
     pop();
   }
 }
@@ -239,9 +240,12 @@ function mouseClicked() {
   }
 }
 
-function drawPlanet(palette1, palette2, palette3) {
+function drawPlanet(planet) {
+  palette1 = planet.palette1;
+  palette2 = planet.palette2;
+  palette3 = planet.palette3;
   let numBands = 4;      // Number of panels on the sphere
-  let sphereSize = 60;  // Radius of the sphere
+  let sphereSize = planet.baseSize;  // Radius of the sphere
   let panelResolution = 2; // Subdivisions per panel for a smoother gradient
 
   // Loop through latitude and longitude panels
