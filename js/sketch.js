@@ -339,12 +339,3 @@ function getPaletteColor(t, palette1, palette2, palette3) {
     return lerpColor(palette2, palette3, (t - 0.5) * 2);
   }
 }
-
-
-
-
-
-// mousePressed() function is called once after every time a mouse button is pressed
-function mousePressed() {
-
-}
