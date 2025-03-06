@@ -24,7 +24,6 @@ function setup() {
   for (let i = 0; i < numPlanets; i++) {
     planets.push(new Planet());
   }
-
 }
 
 function draw() {
@@ -38,7 +37,7 @@ function draw() {
     star.update();
     star.show();
   }
-  
+
   for (let planet of planets) {
     planet.update();
     planet.show();
@@ -58,10 +57,8 @@ function draw() {
     if (spaceJunk[i].isExpired()) {
       spaceJunk.splice(i, 1);
     }
-  }
-  resetMatrix();
-  setAttributes('depth', false);
-  rect(-width/64,height/2.5, 70, 70)
+  }  
+  
 }
 
 // ----------------------------------------------------
@@ -184,6 +181,9 @@ class Planet {
     this.palette1 = color(random(255), random(255), random(255));
     this.palette2 = color(random(255), random(255), random(255));
     this.palette3 = color(random(255), random(255), random(255));
+    this.planetTexture = createGraphics(width, height);
+    this.planetTexture.background(color(random(255), random(255), random(255)))
+    generatePlanetTexture(this.planetTexture, this)
   }
 
   update() {
@@ -263,6 +263,11 @@ function drawPlanet(planet) {
   palette1 = planet.palette1;
   palette2 = planet.palette2;
   palette3 = planet.palette3;
+  rotateY(frameCount * 0.01)
+  noStroke();
+  texture(planet.planetTexture);
+  sphere(150);
+  return;
   let numBands = 4;      // Number of panels on the sphere
   let sphereSize = planet.baseSize;  // Radius of the sphere
   let panelResolution = 2; // Subdivisions per panel for a smoother gradient
@@ -338,6 +343,33 @@ function getPaletteColor(t, palette1, palette2, palette3) {
     // Map 0.5 to 1 from palette2 to palette3
     return lerpColor(palette2, palette3, (t - 0.5) * 2);
   }
+}
+
+function generatePlanetTexture(planetTexture, planet) {
+  for (let i = 0; i < 300; i++) {
+    drawWrappedCircle(planetTexture, random(width), random(height), 140, planet)
+  }
+}
+
+function drawWrappedCircle(pg, x, y, d, planet) {
+  pg.noStroke();
+  let w = pg.width;
+  let h = pg.height;
+  let paletteColors = [planet.palette1, planet.palette2, planet.palette3]
+  let randomColor = random(paletteColors)
+  randomColor.setAlpha(150)
+  pg.fill(randomColor)
+
+  
+    // Loop over offsets: drawing the circle at its original position,
+    // and also at positions shifted by -w and +w horizontally and -h and +h vertically.
+    for (let dx = -w; dx <= w; dx += w) {
+      for (let dy = -h; dy <= h; dy += h) {
+        pg.ellipse(x + dx, y + dy, d);
+      }
+  }
+  
+  
 }
 
 
