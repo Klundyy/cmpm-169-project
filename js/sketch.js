@@ -1,7 +1,7 @@
 let stars = [];
 let spaceJunk = [];
 let numStars = 100;    // Balanced star count
-let junkSpawnRate = 5; // Higher means less frequent
+let junkSpawnRate = 7; // Higher means less frequent
 let planets = [];
 let numPlanets = 2;
 
@@ -70,6 +70,8 @@ function draw() {
 class Star {
   constructor() {
     this.reset();
+    this.twinkleOffset = random(1000);
+    this.rotation = random(TWO_PI);
   }
 
   reset() {
@@ -77,7 +79,7 @@ class Star {
     this.y = random(-height, height);
     this.z = random(0, 3000);
     this.speed = map(this.z, 0, 3000, 20, 5);
-    this.baseSize = random(1, 4);
+    this.baseSize = random(3, 7);
   }
 
   update() {
@@ -86,19 +88,36 @@ class Star {
       this.reset();
       this.z = 0;
     }
+    this.rotation += 0.02;
   }
 
   show() {
     push();
     translate(this.x, this.y, this.z);
-    let size = map(this.z, 0, 2000, this.baseSize * 2, this.baseSize * 0.5);
-    let alpha = map(this.z, 0, 2000, 255, 50);
+    rotate(this.rotation);
+
+    let twinkle = map(sin(frameCount * 0.1 + this.twinkleOffset), -1, 1, 0.7, 1);
+    
+    let size = this.baseSize * twinkle;
+    let alpha = map(this.z, 0, 2000, 255, 50) * twinkle;
+
     noStroke();
     fill(255, alpha);
-    sphere(size);
+
+    beginShape();
+    for (let i = 0; i < 8; i++) {
+      let angle = PI / 4 * i;
+      let r = (i % 2 === 0) ? size * 0.4 : size;
+      let x = cos(angle) * r;
+      let y = sin(angle) * r;
+      vertex(x, y);
+    }
+    endShape(CLOSE);
+
     pop();
   }
 }
+
 
 // ----------------------------------------------------
 // Space Junk Class
