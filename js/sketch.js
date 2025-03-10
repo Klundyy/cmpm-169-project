@@ -3,7 +3,7 @@ let spaceJunk = [];
 let numStars = 100;    // Balanced star count
 let junkSpawnRate = 7; // Higher means less frequent
 let planets = [];
-let numPlanets = 5;
+let numPlanets = 10;
 let shipX = 0;
 let shipY = 0;
 let shipSpeed = 5;
@@ -11,6 +11,12 @@ let movingUp = false;
 let movingDown = false;
 let movingLeft = false;
 let movingRight = false;
+let lazerXOffset = 50;
+let lazerTimeFrames = 3;
+let lazerTimer = lazerTimeFrames;
+let blastX = 0;
+let blastY = 0;
+let lazerMaxWeight = 10
 
 // We'll use an offscreen buffer for color-picking.
 let pickBuffer;
@@ -35,11 +41,19 @@ function setup() {
 
 function draw() {
   background(0);
-
+  stroke("green")
+  lazerTimer++
+  
+  if (lazerTimer <= lazerTimeFrames) {
+    strokeWeight(lazerMaxWeight/lazerTimer)
+    line(lerp(lazerXOffset, blastX-(width/2), lazerTimer/lazerTimeFrames), lerp(height/2, blastY-(height/2), lazerTimer/lazerTimeFrames),
+    lerp(lazerXOffset, blastX-(width/2), Math.min(1, (lazerTimer+1)/lazerTimeFrames)), lerp(height/2, blastY-(height/2), Math.min(1, (lazerTimer+1)/lazerTimeFrames)))
+    line(lerp(-lazerXOffset, blastX-(width/2), lazerTimer/lazerTimeFrames), lerp(height/2, blastY-(height/2), lazerTimer/lazerTimeFrames),
+    lerp(-lazerXOffset, blastX-(width/2), Math.min(1, (lazerTimer+1)/lazerTimeFrames)), lerp(height/2, blastY-(height/2), Math.min(1, (lazerTimer+1)/lazerTimeFrames)))
+  }
   // Position the camera back a bit
   translate(0, 0, -1000);
-
-
+  
   // Update and show stars
   for (let star of stars) {
     star.update();
@@ -234,6 +248,9 @@ class Planet {
 // COLOR-PICKING WHEN CLICKED
 // ----------------------------------------------------
 function mouseClicked() {
+  lazerTimer = 0;
+  blastX = mouseX;
+  blastY = mouseY;
   // 1) Clear the pick buffer and match the main camera transform:
   pickBuffer.background(0);
   
