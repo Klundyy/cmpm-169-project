@@ -3,7 +3,14 @@ let spaceJunk = [];
 let numStars = 100;    // Balanced star count
 let junkSpawnRate = 7; // Higher means less frequent
 let planets = [];
-let numPlanets = 2;
+let numPlanets = 5;
+let shipX = 0;
+let shipY = 0;
+let shipSpeed = 5;
+let movingUp = false;
+let movingDown = false;
+let movingLeft = false;
+let movingRight = false;
 
 // We'll use an offscreen buffer for color-picking.
 let pickBuffer;
@@ -32,6 +39,7 @@ function draw() {
   // Position the camera back a bit
   translate(0, 0, -1000);
 
+
   // Update and show stars
   for (let star of stars) {
     star.update();
@@ -58,6 +66,18 @@ function draw() {
       spaceJunk.splice(i, 1);
     }
   }  
+  if (movingUp) {
+    shipY -= shipSpeed;
+  }
+  if (movingDown) {
+    shipY += shipSpeed;
+  }
+  if (movingLeft) {
+    shipX -= shipSpeed;
+  }
+  if (movingRight) {
+    shipX += shipSpeed;
+  }
   
 }
 
@@ -72,8 +92,11 @@ class Star {
   }
 
   reset() {
-    this.x = random(-width, width);
-    this.y = random(-height, height);
+    this.basex = random(-width, width) + shipX;
+    this.basey = random(-height, height) + shipY;
+    this.x = this.basex;
+    this.y = this.basey;
+    
     this.z = random(0, 3000);
     this.speed = map(this.z, 0, 3000, 20, 5);
     this.baseSize = random(3, 7);
@@ -90,7 +113,7 @@ class Star {
 
   show() {
     push();
-    translate(this.x, this.y, this.z);
+    translate(this.x - shipX, this.y - shipY, this.z);
     rotate(this.rotation);
 
     let twinkle = map(sin(frameCount * 0.1 + this.twinkleOffset), -1, 1, 0.7, 1);
@@ -122,8 +145,9 @@ class Star {
 class SpaceJunk {
   constructor() {
     // Spawn somewhat away from the center:
-    this.x = random(-width * 0.3, width * 0.3);
-    this.y = random(-height * 0.3, height * 0.3);
+    this.x = random(-width * 0.3, width * 0.3) + shipX;
+    this.y = random(-height * 0.3, height * 0.3) + shipY;
+    
     // Don’t spawn right in front of the camera:
     this.z = random(700, 3000);
 
@@ -150,7 +174,7 @@ class SpaceJunk {
     let alpha = map(lifetime, 0, this.maxLifetime, 255, 0);
 
     push();
-    translate(this.x, this.y, this.z);
+    translate(this.x - shipX, this.y - shipY, this.z);
     rotateX(frameCount * this.rotationSpeed);
     rotateY(frameCount * this.rotationSpeed);
     noStroke();
@@ -173,8 +197,8 @@ class Planet {
   }
 
   reset() {
-    this.x = random(-width, width);
-    this.y = random(-height, height);
+    this.x = random(-width, width) + shipX;
+    this.y = random(-height, height) + shipY;
     this.z = random(-7000, -8000);
     this.speed = map(this.z, -7000, -8000, 20, 5);
     this.baseSize = random(1, 4) * 150;
@@ -197,7 +221,7 @@ class Planet {
 
   show() {
     push();
-    translate(this.x, this.y, this.z);
+    translate(this.x - shipX, this.y - shipY, this.z);
     let size = map(this.z, 0, 2000, this.baseSize * 2, this.baseSize * 0.5);
     let alpha = map(this.z, 0, 2000, 255, 50);
     noStroke();
@@ -219,6 +243,7 @@ function mouseClicked() {
   pickBuffer.perspective();  // Default perspective
   pickBuffer.push();
   pickBuffer.translate(0, 0, -1000);
+  pickBuffer.translate(-shipX, -shipY, 0); //account for movement
 
   // 2) Draw each piece of junk with a unique "ID color."
   //    We'll store that "ID" in the red channel. 
@@ -346,8 +371,8 @@ function getPaletteColor(t, palette1, palette2, palette3) {
 }
 
 function generatePlanetTexture(planetTexture, planet) {
-  for (let i = 0; i < 300; i++) {
-    drawWrappedCircle(planetTexture, random(width), random(height), 140, planet)
+  for (let i = 0; i < 150; i++) {
+    drawWrappedCircle(planetTexture, random(width), random(height), 340, planet)
   }
 }
 
@@ -357,7 +382,7 @@ function drawWrappedCircle(pg, x, y, d, planet) {
   let h = pg.height;
   let paletteColors = [planet.palette1, planet.palette2, planet.palette3]
   let randomColor = random(paletteColors)
-  randomColor.setAlpha(150)
+  randomColor.setAlpha(30)
   pg.fill(randomColor)
 
   
@@ -367,10 +392,40 @@ function drawWrappedCircle(pg, x, y, d, planet) {
       for (let dy = -h; dy <= h; dy += h) {
         pg.ellipse(x + dx, y + dy, d);
       }
-  }
-  
-  
+  } 
 }
+
+function keyPressed() {
+  if (key === 'W' || key === 'w') {
+    movingUp = true;
+  }
+  if (key === 'S' || key === 's') {
+    movingDown = true;
+  }
+  if (key === 'A' || key === 'a') {
+    movingLeft = true;
+  }
+  if (key === 'D' || key === 'd') {
+    movingRight = true;
+  }
+}
+
+function keyReleased() {
+  if (key === 'W' || key === 'w') {
+    movingUp = false;
+  }
+  if (key === 'S' || key === 's') {
+    movingDown = false;
+  }
+  if (key === 'A' || key === 'a') {
+    movingLeft = false;
+  }
+  if (key === 'D' || key === 'd') {
+    movingRight = false;
+  }
+}
+
+
 
 
 
