@@ -161,22 +161,26 @@ class SpaceJunk {
     // Spawn somewhat away from the center:
     this.x = random(-width * 0.3, width * 0.3) + shipX;
     this.y = random(-height * 0.3, height * 0.3) + shipY;
-    
+
     // Don’t spawn right in front of the camera:
     this.z = random(700, 3000);
 
-    // Moderate speed
-    this.speed = random(6, 6);
+    // Moderate speed variation
+    this.speed = random(4, 8);
 
     // Size limit
     this.size = random(10, 30);
 
-    // Mild rotation
-    this.rotationSpeed = random(0.01, 0.05);
+    // Mild, independent rotation speeds
+    this.rotationXSpeed = random(0.01, 0.05);
+    this.rotationYSpeed = random(0.01, 0.05);
 
     // Lifetime for a 3-second fade-out
     this.creationTime = millis();
     this.maxLifetime = 3000;
+
+    // Select a random model from the provided spaceJunkList
+    this.spaceJunkObject = floor(random(3));
   }
 
   update() {
@@ -185,15 +189,54 @@ class SpaceJunk {
 
   show() {
     let lifetime = millis() - this.creationTime;
-    let alpha = map(lifetime, 0, this.maxLifetime, 255, 0);
 
     push();
     translate(this.x - shipX, this.y - shipY, this.z);
-    rotateX(frameCount * this.rotationSpeed);
-    rotateY(frameCount * this.rotationSpeed);
+    rotateX(frameCount * this.rotationXSpeed);
+    rotateY(frameCount * this.rotationYSpeed);
     noStroke();
     fill(200, 150, 50, alpha);
-    box(this.size);
+
+    // Draw the selected junk type
+    if (this.spaceJunkObject === 0) {
+      this.drawPipe();
+    } else if (this.spaceJunkObject === 1) {
+      this.drawLamp();
+    }
+
+    pop();
+  }
+
+  drawLamp() {
+    push();
+    sphere(15, 6, 6);
+    pop();
+
+    push();
+    fill(100);
+    translate(0, -18, 0);
+    box(5, 30, 5);
+    pop();
+
+    push();
+    fill(120);
+    translate(0, -35, 0);
+    cylinder(10, 5);
+    pop();
+  }
+
+  drawPipe() {
+    fill(120);
+    push();
+    cylinder(8, 40); // Pipe body
+    pop();
+
+    push();
+    fill(200);
+    translate(0, -20, 0);
+    sphere(10, 6, 6);
+    translate(0, 40, 0);
+    sphere(10, 6, 6);
     pop();
   }
 
@@ -201,7 +244,6 @@ class SpaceJunk {
     return millis() - this.creationTime > this.maxLifetime;
   }
 }
-
 // ----------------------------------------------------
 // Planet Class
 // ----------------------------------------------------
