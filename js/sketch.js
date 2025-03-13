@@ -323,7 +323,7 @@ function checkJunkDelete() {
     
     // Unique color ID in the red channel:
     pickBuffer.noStroke();
-    pickBuffer.fill(i, 0, 0); 
+    pickBuffer.fill(i+1, 0, 0); //the ensure red is greater than 0
     pickBuffer.box(40);
     pickBuffer.pop();
   }
@@ -346,7 +346,7 @@ function checkJunkDelete() {
 
   // 4) If that "red" ID matches a piece of junk, remove it.
   if (r > 0) {
-    spaceJunk.splice(r, 1);
+    spaceJunk.splice(r-1, 1); //every index is 1 off
   }
 }
 
