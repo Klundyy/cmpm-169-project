@@ -17,8 +17,12 @@ let lazerTimer = lazerTimeFrames;
 let blastX = 0;
 let blastY = 0;
 let lazerMaxWeight = 10
-let junkSpawnArea = 0.1;
-let shipSize = 100;
+let junkSpawnAreaX = 0.1;
+let junkSpawnAreaY = 0.1;
+let shipSize = 75;
+let damageShakeFrames = 10;
+let damageShakeFrameEnd = 0;
+let damageShakeMagnitude = 5;
 
 // We'll use an offscreen buffer for color-picking.
 let pickBuffer;
@@ -87,8 +91,10 @@ function draw() {
     spaceJunk[i].x >= -shipSize+shipX && spaceJunk[i].x <= shipSize+shipX &&
     spaceJunk[i].y >= -shipSize+shipY && spaceJunk[i].y <= shipSize+shipY
   ) {
+        console.log("hit", spaceJunk[i].x, spaceJunk[i].y, spaceJunk[i].z, millis() - spaceJunk[i].creationTime);
         spaceJunk.splice(i, 1);
-        console.log("hit", spaceJunk[i].x, spaceJunk[i].y);
+        
+        damageShakeFrameEnd = frameCount + damageShakeFrames;
    } else if (spaceJunk[i].z > 1800) {
     spaceJunk.splice(i, 1);
    }
@@ -105,7 +111,11 @@ function draw() {
   if (movingRight) {
     shipX += shipSpeed;
   }
-  console.log(shipX, shipY)
+
+  if (frameCount < damageShakeFrameEnd) {
+    shipX += random(-damageShakeMagnitude, damageShakeMagnitude+1);
+    shipY += random(-damageShakeMagnitude, damageShakeMagnitude+1);
+  }
 }
 
 // ----------------------------------------------------
@@ -172,8 +182,8 @@ class Star {
 class SpaceJunk {
   constructor() {
     // Spawn somewhat away from the center:
-    this.x = random(-width * junkSpawnArea, width * junkSpawnArea) + shipX;
-    this.y = random(-height * junkSpawnArea, height * junkSpawnArea) + shipY;
+    this.x = random(-width * junkSpawnAreaX, width * junkSpawnAreaX) + shipX;
+    this.y = random(-height * junkSpawnAreaY, height * junkSpawnAreaY) + shipY;
     
     // Don’t spawn right in front of the camera:
     this.z = random(700, 800)
@@ -193,7 +203,7 @@ class SpaceJunk {
     this.maxLifetime = 6000;
 
     // Select a random model from the provided spaceJunkList
-    this.spaceJunkObject = floor(random(3));
+    this.spaceJunkObject = floor(random(2));
   }
 
   update() {
@@ -358,6 +368,7 @@ function checkJunkDelete() {
   // 4) If that "red" ID matches a piece of junk, remove it.
   if (r > 0) {
     spaceJunk.splice(r-1, 1); //every index is 1 off
+    console.log(spaceJunk[r-1])
   }
 }
 
