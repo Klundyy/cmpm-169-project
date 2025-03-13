@@ -17,6 +17,7 @@ let lazerTimer = lazerTimeFrames;
 let blastX = 0;
 let blastY = 0;
 let lazerMaxWeight = 10
+let junkSpawnArea = 0.3;
 
 // We'll use an offscreen buffer for color-picking.
 let pickBuffer;
@@ -37,6 +38,7 @@ function setup() {
   for (let i = 0; i < numPlanets; i++) {
     planets.push(new Planet());
   }
+  checkJunkDelete()
 }
 
 function draw() {
@@ -92,7 +94,6 @@ function draw() {
   if (movingRight) {
     shipX += shipSpeed;
   }
-  
 }
 
 // ----------------------------------------------------
@@ -159,17 +160,17 @@ class Star {
 class SpaceJunk {
   constructor() {
     // Spawn somewhat away from the center:
-    this.x = random(-width * 0.3, width * 0.3) + shipX;
-    this.y = random(-height * 0.3, height * 0.3) + shipY;
-
+    this.x = random(-width * junkSpawnArea, width * junkSpawnArea) + shipX;
+    this.y = random(-height * junkSpawnArea, height * junkSpawnArea) + shipY;
+    
     // Don’t spawn right in front of the camera:
-    this.z = random(700, 3000);
+    this.z = random(700, 800)
 
     // Moderate speed variation
     this.speed = random(4, 8);
 
     // Size limit
-    this.size = random(10, 30);
+    this.size = 30;
 
     // Mild, independent rotation speeds
     this.rotationXSpeed = random(0.01, 0.05);
@@ -177,7 +178,7 @@ class SpaceJunk {
 
     // Lifetime for a 3-second fade-out
     this.creationTime = millis();
-    this.maxLifetime = 3000;
+    this.maxLifetime = 6000;
 
     // Select a random model from the provided spaceJunkList
     this.spaceJunkObject = floor(random(3));
@@ -293,8 +294,12 @@ function mouseClicked() {
   lazerTimer = 0;
   blastX = mouseX;
   blastY = mouseY;
+  checkJunkDelete()
+}
+
+function checkJunkDelete() {
   // 1) Clear the pick buffer and match the main camera transform:
-  pickBuffer.background(0);
+  pickBuffer.background(0, 255, 255);
   
   // By default, pickBuffer uses the same perspective as p5, 
   // but let's reset to be safe:
@@ -313,19 +318,20 @@ function mouseClicked() {
     
     pickBuffer.push();
     pickBuffer.translate(junk.x, junk.y, junk.z);
-    pickBuffer.rotateX(frameCount * junk.rotationSpeed);
-    pickBuffer.rotateY(frameCount * junk.rotationSpeed);
+    //pickBuffer.rotateX(frameCount * junk.rotationSpeed);
+    //pickBuffer.rotateY(frameCount * junk.rotationSpeed);
     
     // Unique color ID in the red channel:
     pickBuffer.noStroke();
     pickBuffer.fill(i, 0, 0); 
-    pickBuffer.box(junk.size);
+    pickBuffer.box(40);
     pickBuffer.pop();
   }
   pickBuffer.pop();
 
   // 3) Read the color under the mouse in this offscreen buffer:
   pickBuffer.loadPixels();
+  
 
   // If your main canvas has a pixelDensity > 1 (e.g., on a retina screen),
   // you need to multiply mouseX, mouseY by that same density:
@@ -334,11 +340,12 @@ function mouseClicked() {
   let py = floor(mouseY * d);
 
   // Index into the pixel array (4 bytes/pixel: R,G,B,A):
-  let index = 4 * (px + py * width * d);
-  let r = pickBuffer.pixels[index]; // We used the red channel as the ID
+  let index = 4 * (mouseX + mouseY * width);
+  let r = pickBuffer.pixels[index + 2]; // We used the red channel as the ID
+  console.log(r)
 
   // 4) If that "red" ID matches a piece of junk, remove it.
-  if (r < spaceJunk.length) {
+  if (r > 0) {
     spaceJunk.splice(r, 1);
   }
 }
