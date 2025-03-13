@@ -1,7 +1,7 @@
 let stars = [];
 let spaceJunk = [];
 let numStars = 100;    // Balanced star count
-let junkSpawnRate = 10; // Higher means less frequent
+let junkSpawnRate = 60; // Higher means less frequent
 let planets = [];
 let numPlanets = 10;
 let shipX = 0;
@@ -23,7 +23,8 @@ let shipSize = 100;
 let damageShakeFrames = 10;
 let damageShakeFrameEnd = 0;
 let damageShakeMagnitude = 5;
-let paralaxSpeed = 50000
+let paralaxSpeed = 25000
+let framesTillDifficultyInrease = 1000
 
 // We'll use an offscreen buffer for color-picking.
 let pickBuffer;
@@ -49,8 +50,13 @@ function setup() {
 
 function draw() {
   background(0);
+
   stroke("green")
   lazerTimer++
+  if (frameCount % framesTillDifficultyInrease == 0) {
+    junkSpawnRate = Math.max(1, floor(junkSpawnRate * (2/3)));
+    
+  }
   
   if (lazerTimer <= lazerTimeFrames) {
     strokeWeight(lazerMaxWeight/lazerTimer)
@@ -140,7 +146,6 @@ class Star {
   }
 
   update() {
-    console.log(dist(this.x, this.y, this.z, shipX, shipY, 1500));
     this.speed = paralaxSpeed/(dist(this.x, this.y, this.z, shipX, shipY, 1500))
     this.z += this.speed;
     if (this.z > 2000) {
@@ -364,7 +369,7 @@ function checkJunkDelete() {
   let py = floor(mouseY * d);
 
   // Index into the pixel array (4 bytes/pixel: R,G,B,A):
-  let index = 4 * (mouseX + mouseY * width);
+  let index = floor(4 * (mouseX + mouseY * floor(width)));
   let r = pickBuffer.pixels[index + 2]; // We used the red channel as the ID
 
   // 4) If that "red" ID matches a piece of junk, remove it.
