@@ -17,7 +17,8 @@ let lazerTimer = lazerTimeFrames;
 let blastX = 0;
 let blastY = 0;
 let lazerMaxWeight = 10
-let junkSpawnArea = 0.3;
+let junkSpawnArea = 0.1;
+let shipSize = 100;
 
 // We'll use an offscreen buffer for color-picking.
 let pickBuffer;
@@ -77,10 +78,20 @@ function draw() {
     spaceJunk[i].update();
     spaceJunk[i].show();
 
+    /*
     // Remove expired junk
     if (spaceJunk[i].isExpired()) {
       spaceJunk.splice(i, 1);
-    }
+    }*/
+   if (spaceJunk[i].z > 1500 && 
+    spaceJunk[i].x >= -shipSize+shipX && spaceJunk[i].x <= shipSize+shipX &&
+    spaceJunk[i].y >= -shipSize+shipY && spaceJunk[i].y <= shipSize+shipY
+  ) {
+        spaceJunk.splice(i, 1);
+        console.log("hit", spaceJunk[i].x, spaceJunk[i].y);
+   } else if (spaceJunk[i].z > 1800) {
+    spaceJunk.splice(i, 1);
+   }
   }  
   if (movingUp) {
     shipY -= shipSpeed;
@@ -94,6 +105,7 @@ function draw() {
   if (movingRight) {
     shipX += shipSpeed;
   }
+  console.log(shipX, shipY)
 }
 
 // ----------------------------------------------------
@@ -167,7 +179,7 @@ class SpaceJunk {
     this.z = random(700, 800)
 
     // Moderate speed variation
-    this.speed = random(4, 8);
+    this.speed = 10//random(4, 8);
 
     // Size limit
     this.size = 30;
@@ -342,7 +354,6 @@ function checkJunkDelete() {
   // Index into the pixel array (4 bytes/pixel: R,G,B,A):
   let index = 4 * (mouseX + mouseY * width);
   let r = pickBuffer.pixels[index + 2]; // We used the red channel as the ID
-  console.log(r)
 
   // 4) If that "red" ID matches a piece of junk, remove it.
   if (r > 0) {
