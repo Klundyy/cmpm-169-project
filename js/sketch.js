@@ -1,7 +1,7 @@
 let stars = [];
 let spaceJunk = [];
 let numStars = 100;    // Balanced star count
-let junkSpawnRate = 7; // Higher means less frequent
+let junkSpawnRate = 10; // Higher means less frequent
 let planets = [];
 let numPlanets = 10;
 let shipX = 0;
@@ -19,10 +19,11 @@ let blastY = 0;
 let lazerMaxWeight = 10
 let junkSpawnAreaX = 0.1;
 let junkSpawnAreaY = 0.1;
-let shipSize = 75;
+let shipSize = 100;
 let damageShakeFrames = 10;
 let damageShakeFrameEnd = 0;
 let damageShakeMagnitude = 5;
+let paralaxSpeed = 50000
 
 // We'll use an offscreen buffer for color-picking.
 let pickBuffer;
@@ -91,9 +92,8 @@ function draw() {
     spaceJunk[i].x >= -shipSize+shipX && spaceJunk[i].x <= shipSize+shipX &&
     spaceJunk[i].y >= -shipSize+shipY && spaceJunk[i].y <= shipSize+shipY
   ) {
-        console.log("hit", spaceJunk[i].x, spaceJunk[i].y, spaceJunk[i].z, millis() - spaceJunk[i].creationTime);
+      //hit ship
         spaceJunk.splice(i, 1);
-        
         damageShakeFrameEnd = frameCount + damageShakeFrames;
    } else if (spaceJunk[i].z > 1800) {
     spaceJunk.splice(i, 1);
@@ -134,12 +134,14 @@ class Star {
     this.x = this.basex;
     this.y = this.basey;
     
-    this.z = random(0, 3000);
-    this.speed = map(this.z, 0, 3000, 20, 5);
+    this.z = random(-3000, 3000);
+    this.speed = 15 //map(this.z, 0, 3000, 20, 5);
     this.baseSize = random(3, 7);
   }
 
   update() {
+    console.log(dist(this.x, this.y, this.z, shipX, shipY, 1500));
+    this.speed = paralaxSpeed/(dist(this.x, this.y, this.z, shipX, shipY, 1500))
     this.z += this.speed;
     if (this.z > 2000) {
       this.reset();
@@ -189,7 +191,7 @@ class SpaceJunk {
     this.z = random(700, 800)
 
     // Moderate speed variation
-    this.speed = 10//random(4, 8);
+    this.speed = (paralaxSpeed/(dist(this.x, this.y, this.z, shipX, shipY, 1500))) / 10 //random(4, 8);
 
     // Size limit
     this.size = 30;
@@ -278,8 +280,8 @@ class Planet {
   reset() {
     this.x = random(-width, width) + shipX;
     this.y = random(-height, height) + shipY;
-    this.z = random(-7000, -8000);
-    this.speed = map(this.z, -7000, -8000, 20, 5);
+    this.z = random(-5000, -8000);
+    this.speed = (paralaxSpeed/(dist(this.x, this.y, this.z, shipX, shipY, 1500))) * 3//map(this.z, -7000, -8000, 20, 5);
     this.baseSize = random(1, 4) * 150;
     this.palette1 = color(random(255), random(255), random(255));
     this.palette2 = color(random(255), random(255), random(255));
@@ -368,7 +370,6 @@ function checkJunkDelete() {
   // 4) If that "red" ID matches a piece of junk, remove it.
   if (r > 0) {
     spaceJunk.splice(r-1, 1); //every index is 1 off
-    console.log(spaceJunk[r-1])
   }
 }
 
