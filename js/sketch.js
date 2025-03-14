@@ -3,7 +3,7 @@ let spaceJunk = [];
 let numStars = 100;    // Balanced star count
 let junkSpawnRate = 60; // Higher means less frequent
 let planets = [];
-let numPlanets = 10;
+let numPlanets = 20;
 let shipX = 0;
 let shipY = 0;
 let shipSpeed = 5;
@@ -11,7 +11,7 @@ let movingUp = false;
 let movingDown = false;
 let movingLeft = false;
 let movingRight = false;
-let lazerXOffset = 150;
+let lazerXOffset = 250;
 let lazerYOffset = -200;
 let lazerTimeFrames = 4;
 let lazerTimer = lazerTimeFrames;
@@ -25,13 +25,12 @@ let damageShakeFrames = 10;
 let damageShakeFrameEnd = 0;
 let damageShakeMagnitude = 5;
 let paralaxSpeed = 25000
-let framesTillDifficultyInrease = 1000
+let framesTillDifficultyInrease = 3000
 let myFont;
 let score = 0;
 let crackedGlass = [];
 let health = 100;
 let gameOn = true;
-
 // We'll use an offscreen buffer for color-picking.
 let pickBuffer;
 
@@ -99,7 +98,7 @@ function draw() {
   stroke("green")
   lazerTimer++
   if (frameCount % framesTillDifficultyInrease == 0) {
-    junkSpawnRate = Math.max(5, floor(junkSpawnRate * (2/3)));
+    junkSpawnRate = Math.max(10, floor(junkSpawnRate * (2/3)));
   }
   
   if (lazerTimer <= lazerTimeFrames) {
@@ -147,6 +146,7 @@ function draw() {
         damageShakeFrameEnd = frameCount + damageShakeFrames;
         health -= 10;
    } else if (spaceJunk[i].z > 1800) {
+    score -= 5
     spaceJunk.splice(i, 1);
    }
   }  
@@ -337,8 +337,8 @@ class Planet {
   }
 
   reset() {
-    this.x = random(-width, width) + shipX;
-    this.y = random(-height, height) + shipY;
+    this.x = random(-width*3, width*3) + shipX;
+    this.y = random(-height*3, height*3) + shipY;
     this.z = random(-5000, -8000);
     this.speed = (paralaxSpeed/(dist(this.x, this.y, this.z, shipX, shipY, 1500))) * 3//map(this.z, -7000, -8000, 20, 5);
     this.baseSize = random(1, 4) * 150;
