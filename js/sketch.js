@@ -72,6 +72,7 @@ function draw() {
   textSize(30);
   text(`Score: ${score}`, 0, -height / 2 + 10);
   text(`Health: ${health}`, 0, -height / 2 + 40);
+  
   let img;
   if (health <= 30) {
     img = crackedGlass[2]
@@ -80,11 +81,16 @@ function draw() {
   } else if (health <= 90) {
     img = crackedGlass[0]
   }
-  if (health <= 90) {
+  if (health <= 0) {
     textSize(60);
     text("Game Over", 0,0);
     gameOn = false;
   }
+  textAlign(LEFT);
+  textSize(30);
+  text(`WASD = MOVE`, -width/2 + 20, -height/2 + 20);
+  text(`LCLICK = SHOOT\n SPACE JUNK`, -width/2 + 20, -height/2 + 60);
+  text(`R = RESET`, -width/2 + 20, -height/2 + 140);
   
 
   // Switch back to 3D
@@ -93,8 +99,7 @@ function draw() {
   stroke("green")
   lazerTimer++
   if (frameCount % framesTillDifficultyInrease == 0) {
-    junkSpawnRate = Math.max(1, floor(junkSpawnRate * (2/3)));
-    
+    junkSpawnRate = Math.max(5, floor(junkSpawnRate * (2/3)));
   }
   
   if (lazerTimer <= lazerTimeFrames) {
