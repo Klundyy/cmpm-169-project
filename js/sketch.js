@@ -11,12 +11,13 @@ let movingUp = false;
 let movingDown = false;
 let movingLeft = false;
 let movingRight = false;
-let lazerXOffset = 50;
-let lazerTimeFrames = 3;
+let lazerXOffset = 150;
+let lazerYOffset = -200;
+let lazerTimeFrames = 4;
 let lazerTimer = lazerTimeFrames;
 let blastX = 0;
 let blastY = 0;
-let lazerMaxWeight = 10
+let lazerMaxWeight = 5
 let junkSpawnAreaX = 0.1;
 let junkSpawnAreaY = 0.1;
 let shipSize = 100;
@@ -25,9 +26,21 @@ let damageShakeFrameEnd = 0;
 let damageShakeMagnitude = 5;
 let paralaxSpeed = 25000
 let framesTillDifficultyInrease = 1000
+let myFont;
+let score = 0;
+let crackedGlass = [];
+let health = 100;
+let gameOn = true;
 
 // We'll use an offscreen buffer for color-picking.
 let pickBuffer;
+
+function preload() {
+  myFont = loadFont('assets/PublicPixel-rv0pA.ttf');
+  for (let i = 0; i < 3; i++) {
+    crackedGlass.push(loadImage(`assets/New Piskel-${i+1}.png.png`))
+  }
+}
 
 function setup() {
   createCanvas(windowWidth, windowHeight, WEBGL);
@@ -45,12 +58,38 @@ function setup() {
   for (let i = 0; i < numPlanets; i++) {
     planets.push(new Planet());
   }
-  checkJunkDelete()
+  textFont(myFont);
 }
 
 function draw() {
-  background(0);
+  background(0)
+  resetMatrix();
+  ortho();
 
+  // Draw 2D HUD elements
+  textAlign(CENTER, TOP);
+  blendMode(BLEND)
+  textSize(30);
+  text(`Score: ${score}`, 0, -height / 2 + 10);
+  text(`Health: ${health}`, 0, -height / 2 + 40);
+  let img;
+  if (health <= 30) {
+    img = crackedGlass[2]
+  } else if (health <= 60) {
+    img = crackedGlass[1]
+  } else if (health <= 90) {
+    img = crackedGlass[0]
+  }
+  if (health <= 90) {
+    textSize(60);
+    text("Game Over", 0,0);
+    gameOn = false;
+  }
+  
+
+  // Switch back to 3D
+  perspective();
+  
   stroke("green")
   lazerTimer++
   if (frameCount % framesTillDifficultyInrease == 0) {
@@ -60,10 +99,10 @@ function draw() {
   
   if (lazerTimer <= lazerTimeFrames) {
     strokeWeight(lazerMaxWeight/lazerTimer)
-    line(lerp(lazerXOffset, blastX-(width/2), lazerTimer/lazerTimeFrames), lerp(height/2, blastY-(height/2), lazerTimer/lazerTimeFrames),
-    lerp(lazerXOffset, blastX-(width/2), Math.min(1, (lazerTimer+1)/lazerTimeFrames)), lerp(height/2, blastY-(height/2), Math.min(1, (lazerTimer+1)/lazerTimeFrames)))
-    line(lerp(-lazerXOffset, blastX-(width/2), lazerTimer/lazerTimeFrames), lerp(height/2, blastY-(height/2), lazerTimer/lazerTimeFrames),
-    lerp(-lazerXOffset, blastX-(width/2), Math.min(1, (lazerTimer+1)/lazerTimeFrames)), lerp(height/2, blastY-(height/2), Math.min(1, (lazerTimer+1)/lazerTimeFrames)))
+    line(lerp(lazerXOffset, blastX-(width/2), lazerTimer/lazerTimeFrames), lerp(height/2 - lazerYOffset, blastY-(height/2), lazerTimer/lazerTimeFrames),
+    lerp(lazerXOffset, blastX-(width/2), Math.min(1, (lazerTimer+1)/lazerTimeFrames)), lerp(height/2 - lazerYOffset, blastY-(height/2), Math.min(1, (lazerTimer+1)/lazerTimeFrames)))
+    line(lerp(-lazerXOffset, blastX-(width/2), lazerTimer/lazerTimeFrames), lerp(height/2 - lazerYOffset, blastY-(height/2), lazerTimer/lazerTimeFrames),
+    lerp(-lazerXOffset, blastX-(width/2), Math.min(1, (lazerTimer+1)/lazerTimeFrames)), lerp(height/2 - lazerYOffset, blastY-(height/2), Math.min(1, (lazerTimer+1)/lazerTimeFrames)))
   }
   // Position the camera back a bit
   translate(0, 0, -1000);
@@ -101,6 +140,7 @@ function draw() {
       //hit ship
         spaceJunk.splice(i, 1);
         damageShakeFrameEnd = frameCount + damageShakeFrames;
+        health -= 10;
    } else if (spaceJunk[i].z > 1800) {
     spaceJunk.splice(i, 1);
    }
@@ -119,9 +159,18 @@ function draw() {
   }
 
   if (frameCount < damageShakeFrameEnd) {
-    shipX += random(-damageShakeMagnitude, damageShakeMagnitude+1);
-    shipY += random(-damageShakeMagnitude, damageShakeMagnitude+1);
+    shipX += random(-damageShakeMagnitude, damageShakeMagnitude);
+    shipY += random(-damageShakeMagnitude, damageShakeMagnitude);
   }
+  if (img) {
+    push()
+    translate(0, 0, 1500);
+    noStroke()
+    texture(img)
+    plane(width/2 - 150,height/2 - 150)
+    pop()
+  }
+  
 }
 
 // ----------------------------------------------------
@@ -320,6 +369,9 @@ class Planet {
 // COLOR-PICKING WHEN CLICKED
 // ----------------------------------------------------
 function mouseClicked() {
+  if (!gameOn) {
+    return;
+  }
   lazerTimer = 0;
   blastX = mouseX;
   blastY = mouseY;
@@ -374,6 +426,7 @@ function checkJunkDelete() {
 
   // 4) If that "red" ID matches a piece of junk, remove it.
   if (r > 0) {
+    score += 5
     spaceJunk.splice(r-1, 1); //every index is 1 off
   }
 }
@@ -501,6 +554,13 @@ function keyPressed() {
   }
   if (key === 'D' || key === 'd') {
     movingRight = true;
+  }
+  if (key === 'R' || key === 'r') {
+    score = 0;
+    health = 100
+    gameOn = true
+    junkSpawnRate = 60
+    spaceJunk = []
   }
 }
 
