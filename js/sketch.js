@@ -18,8 +18,8 @@ let lazerTimer = lazerTimeFrames;
 let blastX = 0;
 let blastY = 0;
 let lazerMaxWeight = 5
-let junkSpawnAreaX = 0.1;
-let junkSpawnAreaY = 0.1;
+let junkSpawnAreaX = 0.3;
+let junkSpawnAreaY = 0.2;
 let shipSize = 100;
 let damageShakeFrames = 10;
 let damageShakeFrameEnd = 0;
@@ -33,6 +33,8 @@ let health = 100;
 let gameOn = true;
 // We'll use an offscreen buffer for color-picking.
 let pickBuffer;
+let explosions = []
+let explosionLifespan = 250
 
 function preload() {
   myFont = loadFont('assets/PublicPixel-rv0pA.ttf');
@@ -121,6 +123,14 @@ function draw() {
   for (let planet of planets) {
     planet.update();
     planet.show();
+  }
+
+  for (let i = explosions.length-1; i >= 0; i--) {
+    explosions[i].update();
+    explosions[i].show();
+    if (explosions[i].isFinished()) {
+      explosions.splice(i, 1)
+    }
   }
 
   // Spawn junk periodically
@@ -237,6 +247,41 @@ class Star {
   }
 }
 
+// ----------------------------------------------------
+// Explosion Class
+// ----------------------------------------------------
+class Explosion {
+  constructor(x, y, z) {
+    this.pos = createVector(x, y, z);
+    this.vel = p5.Vector.random3D();
+    this.vel.mult(random(1, 3));
+    this.lifespan = explosionLifespan;
+    this.r = random(3, 6);
+    this.c1 = color(120, 0, 0);
+    this.c2 = color(120, 120, 0);
+  }
+  
+  update() {
+    this.pos.add(this.vel);
+    this.lifespan -= 4;
+  }
+  
+  show() {
+    push();
+    translate(this.pos.x-shipX, this.pos.y-shipY, this.pos.z);
+    let col = lerpColor(this.c2, this.c1, this.lifespan/explosionLifespan)//color(red(this.c1), green(this.c1), blue(this.c1), this.lifespan);
+    col.setAlpha(this.lifespan)
+    fill(col);
+    noStroke()
+    sphere(this.r);
+    pop();
+  }
+  
+  isFinished() {
+    return this.lifespan < 0;
+  }
+}
+
 
 // ----------------------------------------------------
 // Space Junk Class
@@ -248,7 +293,7 @@ class SpaceJunk {
     this.y = random(-height * junkSpawnAreaY, height * junkSpawnAreaY) + shipY;
     
     // Don’t spawn right in front of the camera:
-    this.z = random(700, 800)
+    this.z = random(0, 100)
 
     // Moderate speed variation
     this.speed = (paralaxSpeed/(dist(this.x, this.y, this.z, shipX, shipY, 1500))) / 10 //random(4, 8);
@@ -335,7 +380,6 @@ class SpaceJunk {
 class Planet {
   constructor() {
     this.planetTexture = createGraphics(width, height);
-    console.log("planet made")
     this.reset();
   }
 
@@ -434,6 +478,9 @@ function checkJunkDelete() {
   // 4) If that "red" ID matches a piece of junk, remove it.
   if (r > 0) {
     score += 5
+    for (let i = 0; i < 20; i++) {
+      explosions.push(new Explosion(spaceJunk[r-1].x, spaceJunk[r-1].y, spaceJunk[r-1].z))
+    }
     spaceJunk.splice(r-1, 1); //every index is 1 off
   }
 }
