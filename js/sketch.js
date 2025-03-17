@@ -3,7 +3,7 @@ let spaceJunk = [];
 let numStars = 50;    // Balanced star count
 let junkSpawnRate = 60; // Higher means less frequent
 let planets = [];
-let numPlanets = 15;
+let numPlanets = 5;
 let shipX = 0;
 let shipY = 0;
 let shipSpeed = 5;
@@ -17,7 +17,7 @@ let lazerTimeFrames = 4;
 let lazerTimer = lazerTimeFrames;
 let blastX = 0;
 let blastY = 0;
-let lazerMaxWeight = 5
+let lazerMaxWeight = 10;
 let junkSpawnAreaX = 0.3;
 let junkSpawnAreaY = 0.2;
 let shipSize = 100;
@@ -35,12 +35,27 @@ let gameOn = true;
 let pickBuffer;
 let explosions = []
 let explosionLifespan = 250
+let milestones = [50, 100, 150, 250]; // Milestone scores
+let currentMilestone = 0; // Track the current milestone
+let milestoneMessage = ""; // Store the milestone message
+let milestoneDisplayTime = 2; // Track how long the message is displayed
+let milestoneAnimationStart = 0; // Track when the animation started
+let milestoneAnimationDuration = 30; // Duration of the glitchy effect (in frames)
+let astronautImg;
+
+const milestoneMessages = [
+  "One step forward for humanity!",
+  "Every piece of trash removed brings us closer to a cleaner future.",
+  "The stars shine brighter as we clean up our mess.",
+  "Cheers to being eco-friendly."
+];
 
 function preload() {
   myFont = loadFont('assets/PublicPixel-rv0pA.ttf');
   for (let i = 0; i < 3; i++) {
     crackedGlass.push(loadImage(`assets/New Piskel-${i+1}.png.png`))
   }
+  astronautImg = loadImage('assets/astronaut.png');
 }
 
 function setup() {
@@ -69,11 +84,15 @@ function draw() {
   ortho();
 
   // Draw 2D HUD elements
-  textAlign(CENTER, TOP);
-  blendMode(BLEND)
+  textAlign(RIGHT, TOP); // Align text to the top-right
+  blendMode(BLEND);
   textSize(30);
-  text(`Score: ${score}`, 0, -height / 2 + 10);
-  text(`Health: ${health}`, 0, -height / 2 + 40);
+  fill(255); // Ensure text is visible (white color)
+  
+  // Position text in the top-right corner with some padding
+  let padding = 20; // Adjust this value for spacing from the edges
+  text(`Score: ${score}`, width / 2 - padding, -height / 2 + padding);
+  text(`Health: ${health}`, width / 2 - padding, -height / 2 + padding + 40);
   
   let img;
   if (health <= 30) {
@@ -105,7 +124,7 @@ function draw() {
   }
   
   if (lazerTimer <= lazerTimeFrames) {
-    strokeWeight(lazerMaxWeight/lazerTimer)
+    strokeWeight(lazerMaxWeight * 2 /lazerTimer)
     line(lerp(lazerXOffset, blastX-(width/2), lazerTimer/lazerTimeFrames), lerp(height/2 - lazerYOffset, blastY-(height/2), lazerTimer/lazerTimeFrames),
     lerp(lazerXOffset, blastX-(width/2), Math.min(1, (lazerTimer+1)/lazerTimeFrames)), lerp(height/2 - lazerYOffset, blastY-(height/2), Math.min(1, (lazerTimer+1)/lazerTimeFrames)))
     line(lerp(-lazerXOffset, blastX-(width/2), lazerTimer/lazerTimeFrames), lerp(height/2 - lazerYOffset, blastY-(height/2), lazerTimer/lazerTimeFrames),
@@ -123,6 +142,13 @@ function draw() {
   for (let planet of planets) {
     planet.update();
     planet.show();
+
+      // Check for collision with the player
+    if (checkPlanetCollision(planet)) {
+      health = 0; // Set health to 0
+      gameOn = false; // End the game
+      break; // Exit the loop
+    }
   }
 
   for (let i = explosions.length-1; i >= 0; i--) {
@@ -134,7 +160,7 @@ function draw() {
   }
 
   // Spawn junk periodically
-  if (frameCount % junkSpawnRate === 0) {
+  if (frameCount % junkSpawnRate === 0 && spaceJunk.length < 10) {
     spaceJunk.push(new SpaceJunk());
   }
 
@@ -186,7 +212,44 @@ function draw() {
     plane(width/2 - 150,height/2 - 150)
     pop()
   }
+
+  if (currentMilestone < milestones.length && score >= milestones[currentMilestone]) {
+    milestoneMessage = milestoneMessages[currentMilestone];
+    milestoneDisplayTime = frameCount + 180; // Display message for 3 seconds (60 FPS * 3)
+    milestoneAnimationStart = frameCount; // Start the animation
+    currentMilestone++; // Move to the next milestone
+  }
   
+  if (frameCount < milestoneDisplayTime) {
+    let animationProgress = (frameCount - milestoneAnimationStart) / milestoneAnimationDuration;
+    animationProgress = constrain(animationProgress, 0, 1); // Clamp between 0 and 1
+
+    // Glitchy effect: Randomly offset the text and image position
+    if (animationProgress < 1) {
+      let offsetX = random(-10, 10);
+      let offsetY = random(-10, 10);
+      translate(offsetX, offsetY);
+    }
+
+    // Fade in the text and image
+    let opacity = map(animationProgress, 0, 1, 0, 255);
+    fill(255, opacity);
+    tint(255, opacity); // Apply opacity to the image
+
+    // Move the text and image into position
+    let textY = map(animationProgress, 0, 1, height / 2 + 100, height / 2 + 50);
+    let imageX = -textWidth(milestoneMessage) / 2 - 200; // Further to the left
+    let imageY = textY - astronautImg.height / 6; // Slightly higher to align with text
+
+    // Draw the astronaut image (smaller size)
+    let imageScale = 0.4; // Scale down to 40% of original size
+    image(astronautImg, imageX, imageY, astronautImg.width * imageScale, astronautImg.height * imageScale);
+
+    // Draw the milestone text
+    textSize(30);
+    textAlign(CENTER, CENTER);
+    text(milestoneMessage, 0, textY);
+  }
 }
 
 // ----------------------------------------------------
@@ -296,7 +359,7 @@ class SpaceJunk {
     this.z = random(0, 100)
 
     // Moderate speed variation
-    this.speed = (paralaxSpeed/(dist(this.x, this.y, this.z, shipX, shipY, 1500))) / 10 //random(4, 8);
+    this.speed = (paralaxSpeed / (dist(this.x, this.y, this.z, shipX, shipY, 1500))) / 5; 
 
     // Size limit
     this.size = 30;
@@ -310,7 +373,7 @@ class SpaceJunk {
     this.maxLifetime = 6000;
 
     // Select a random model from the provided spaceJunkList
-    this.spaceJunkObject = floor(random(2));
+    this.spaceJunkObject = floor(random(4));
   }
 
   update() {
@@ -332,7 +395,12 @@ class SpaceJunk {
       this.drawPipe();
     } else if (this.spaceJunkObject === 1) {
       this.drawLamp();
-    }
+    } else if (this.spaceJunkObject === 2) {
+      this.drawHouse();
+    } else if (this.spaceJunkObject === 3) {
+      this.drawCar();
+    } 
+
 
     pop();
   }
@@ -370,6 +438,81 @@ class SpaceJunk {
     pop();
   }
 
+  drawHouse() {
+    push();
+    // House base
+    fill(150, 100, 50); // Brown color for the walls
+    translate(0, -20, 0); // Center the house
+    box(40, 40, 40); // Main house structure
+  
+    // Roof
+    fill(100, 50, 0); // Dark brown color for the roof
+    translate(0, -20, 0); // Position the roof on top of the house
+  
+    // Front triangle
+    beginShape();
+    vertex(-20, 0, -20); // Bottom-left corner
+    vertex(20, 0, -20);  // Bottom-right corner
+    vertex(0, -30, 0);   // Top-center point
+    endShape(CLOSE);
+  
+    // Back triangle
+    beginShape();
+    vertex(-20, 0, 20);  // Bottom-left corner (back)
+    vertex(20, 0, 20);   // Bottom-right corner (back)
+    vertex(0, -30, 0);   // Top-center point
+    endShape(CLOSE);
+  
+    // Left side triangle
+    beginShape();
+    vertex(-20, 0, -20); // Bottom-left corner (front)
+    vertex(-20, 0, 20);  // Bottom-left corner (back)
+    vertex(0, -30, 0);   // Top-center point
+    endShape(CLOSE);
+  
+    // Right side triangle
+    beginShape();
+    vertex(20, 0, -20);  // Bottom-right corner (front)
+    vertex(20, 0, 20);   // Bottom-right corner (back)
+    vertex(0, -30, 0);   // Top-center point
+    endShape(CLOSE);
+
+    // Door
+    fill(100, 50, 50); // Red color for the door
+    translate(0, 29, 21); // Position the door at the front of the house
+    box(10, 20, 5); // Door shape
+
+    // Windows
+    fill(200, 200, 255); // Light blue color for the windows
+    translate(-15, -15, -21); // Left window
+    box(12, 15, 5);
+    translate(30, 5, 1); // Right window
+    box(12, 15, 5);
+  
+    pop();
+  }
+
+  drawCar() {
+    push();
+    fill(200, 0, 0); // Red color for the car body
+    box(60, 30, 30); // Car body
+  
+    // Wheels
+    fill(255); // White color for the wheels
+    // Front wheels
+    translate(-20, 15, -15); // Lowered and aligned with the bottom
+    sphere(10); // Front-left wheel
+    translate(40, 0, 0);
+    sphere(10); // Front-right wheel
+  
+    // Rear wheels
+    translate(0, -30, 0); // Move to the rear
+    sphere(10); // Rear-right wheel
+    translate(-40, 0, 0);
+    sphere(10); // Rear-left wheel
+    pop();
+  }
+
   isExpired() {
     return millis() - this.creationTime > this.maxLifetime;
   }
@@ -387,7 +530,7 @@ class Planet {
     this.x = random(-width*3, width*3) + shipX;
     this.y = random(-height*3, height*3) + shipY;
     this.z = random(-5000, -8000);
-    this.speed = (paralaxSpeed/(dist(this.x, this.y, this.z, shipX, shipY, 1500))) * 3//map(this.z, -7000, -8000, 20, 5);
+    this.speed = (paralaxSpeed / (dist(this.x, this.y, this.z, shipX, shipY, 1500))) * 1.5;
     this.baseSize = random(1, 4) * 150;
     this.palette1 = color(random(255), random(255), random(255));
     this.palette2 = color(random(255), random(255), random(255));
@@ -496,6 +639,26 @@ function drawPlanet(planet) {
   return;
 }
 
+function checkPlanetCollision(planet) {
+  // Calculate the distance in 3D space (X, Y, and Z)
+  let dx = shipX - planet.x;
+  let dy = shipY - planet.y;
+  let dz = 1500 - planet.z; // 1500 is the player's Z position (from the camera setup)
+
+  // Calculate the 3D distance
+  let distance = sqrt(dx * dx + dy * dy + dz * dz);
+
+  // Define collision thresholds
+  let planetSize = planet.baseSize / 2; // Approximate planet radius
+  let playerSize = shipSize / 2; // Approximate player radius
+
+  // Check if the distance is less than the sum of the radii
+  if (distance < playerSize + planetSize) {
+    return true; // Collision detected
+  }
+  return false; // No collision
+}
+
 function getPaletteColor(t, palette1, palette2, palette3) {
   if (t < 0.5) {
     // Map 0 to 0.5 from palette1 to palette2
@@ -546,10 +709,11 @@ function keyPressed() {
   }
   if (key === 'R' || key === 'r') {
     score = 0;
-    health = 100
-    gameOn = true
-    junkSpawnRate = 60
-    spaceJunk = []
+    health = 100;
+    gameOn = true;
+    junkSpawnRate = 60;
+    spaceJunk = [];
+    currentMilestone = 0;
   }
 }
 
@@ -567,16 +731,4 @@ function keyReleased() {
     movingRight = false;
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-
 
