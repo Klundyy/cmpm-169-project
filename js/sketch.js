@@ -42,7 +42,7 @@ function preload() {
 }
 
 function setup() {
-  createCanvas(windowWidth, windowHeight, WEBGL);
+  let canvas = createCanvas(windowWidth, windowHeight, WEBGL);
   // Create a matching offscreen buffer in WEBGL mode
   pickBuffer = createGraphics(width, height, WEBGL);
 
@@ -334,6 +334,8 @@ class SpaceJunk {
 // ----------------------------------------------------
 class Planet {
   constructor() {
+    this.planetTexture = createGraphics(width, height);
+    console.log("planet made")
     this.reset();
   }
 
@@ -346,7 +348,6 @@ class Planet {
     this.palette1 = color(random(255), random(255), random(255));
     this.palette2 = color(random(255), random(255), random(255));
     this.palette3 = color(random(255), random(255), random(255));
-    this.planetTexture = createGraphics(width, height);
     this.planetTexture.background(color(random(255), random(255), random(255)))
     generatePlanetTexture(this.planetTexture, this)
   }
@@ -446,71 +447,6 @@ function drawPlanet(planet) {
   texture(planet.planetTexture);
   sphere(planet.baseSize);
   return;
-  let numBands = 4;      // Number of panels on the sphere
-  let sphereSize = planet.baseSize;  // Radius of the sphere
-  let panelResolution = 2; // Subdivisions per panel for a smoother gradient
-
-  // Loop through latitude and longitude panels
-  for (let i = 0; i < numBands; i++) {
-    let lat1 = map(i, 0, numBands, -PI / 2, PI / 2);
-    let lat2 = map(i + 1, 0, numBands, -PI / 2, PI / 2);
-    
-    for (let j = 0; j < numBands; j++) {
-      let lon1 = map(j, 0, numBands, 0, TWO_PI);
-      let lon2 = map(j + 1, 0, numBands, 0, TWO_PI);
-
-      // Subdivide each panel to create a smooth gradient
-      for (let u = 0; u < panelResolution; u++) {
-        for (let v = 0; v < panelResolution; v++) {
-          
-          let lerpU1 = map(u, 0, panelResolution, lon1, lon2);
-          let lerpU2 = map(u + 1, 0, panelResolution, lon1, lon2);
-          let lerpV1 = map(v, 0, panelResolution, lat1, lat2);
-          let lerpV2 = map(v + 1, 0, panelResolution, lat1, lat2);
-
-          let x1 = sphereSize * cos(lerpV1) * cos(lerpU1);
-          let y1 = sphereSize * cos(lerpV1) * sin(lerpU1);
-          let z1 = sphereSize * sin(lerpV1);
-
-          let x2 = sphereSize * cos(lerpV2) * cos(lerpU1);
-          let y2 = sphereSize * cos(lerpV2) * sin(lerpU1);
-          let z2 = sphereSize * sin(lerpV2);
-
-          let x3 = sphereSize * cos(lerpV2) * cos(lerpU2);
-          let y3 = sphereSize * cos(lerpV2) * sin(lerpU2);
-          let z3 = sphereSize * sin(lerpV2);
-
-          let x4 = sphereSize * cos(lerpV1) * cos(lerpU2);
-          let y4 = sphereSize * cos(lerpV1) * sin(lerpU2);
-          let z4 = sphereSize * sin(lerpV1);
-
-          // Generate a noise value for each vertex (0 to 1)
-          let t1 = noise(x1 * 0.05, y1 * 0.05);
-          let t2 = noise(x2 * 0.05, y2 * 0.05);
-          let t3 = noise(x3 * 0.05, y3 * 0.05);
-          let t4 = noise(x4 * 0.05, y4 * 0.05);
-
-          // Map the noise values to our random palette gradient
-          let c1 = getPaletteColor(t1, palette1, palette2, palette3);
-          let c2 = getPaletteColor(t2, palette1, palette2, palette3);
-          let c3 = getPaletteColor(t3, palette1, palette2, palette3);
-          let c4 = getPaletteColor(t4, palette1, palette2, palette3);
-
-          // Draw the quad with vertex colors to form a gradient on the panel
-          beginShape();
-          fill(c1);
-          vertex(x1, y1, z1);
-          fill(c2);
-          vertex(x2, y2, z2);
-          fill(c3);
-          vertex(x3, y3, z3);
-          fill(c4);
-          vertex(x4, y4, z4);
-          endShape(CLOSE);
-        }
-      }
-    }
-  }
 }
 
 function getPaletteColor(t, palette1, palette2, palette3) {
