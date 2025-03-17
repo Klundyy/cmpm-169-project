@@ -1,9 +1,9 @@
 let stars = [];
 let spaceJunk = [];
-let numStars = 100;    // Balanced star count
+let numStars = 50;    // Balanced star count
 let junkSpawnRate = 60; // Higher means less frequent
 let planets = [];
-let numPlanets = 20;
+let numPlanets = 15;
 let shipX = 0;
 let shipY = 0;
 let shipSpeed = 5;
@@ -62,6 +62,7 @@ function setup() {
 
 function draw() {
   background(0)
+  cursor(CROSS)
   resetMatrix();
   ortho();
 
@@ -443,7 +444,7 @@ function drawPlanet(planet) {
   rotateY(frameCount * 0.01)
   noStroke();
   texture(planet.planetTexture);
-  sphere(150);
+  sphere(planet.baseSize);
   return;
   let numBands = 4;      // Number of panels on the sphere
   let sphereSize = planet.baseSize;  // Radius of the sphere
