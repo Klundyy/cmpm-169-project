@@ -373,7 +373,7 @@ class SpaceJunk {
     this.maxLifetime = 6000;
 
     // Select a random model from the provided spaceJunkList
-    this.spaceJunkObject = floor(random(4));
+    this.spaceJunkObject = floor(random(6));
   }
 
   update() {
@@ -399,6 +399,10 @@ class SpaceJunk {
       this.drawHouse();
     } else if (this.spaceJunkObject === 3) {
       this.drawCar();
+    } else if (this.spaceJunkObject === 4) {
+      this.drawGuitar();
+    } else if (this.spaceJunkObject === 5) {
+      this.drawSatellite();
     } 
 
 
@@ -435,6 +439,64 @@ class SpaceJunk {
     sphere(10, 6, 6);
     translate(0, 40, 0);
     sphere(10, 6, 6);
+    pop();
+  }
+
+
+  drawGuitar() {
+    fill(150, 75, 0);
+    push();
+    translate(0, -35, 0);
+    rotateX(HALF_PI);
+    cylinder(10, 6);
+    pop();
+
+    push();
+    fill(100);
+    translate(0, -18, 0);
+    box(6, 30, 5); // Guitar neck
+    pop();
+    
+    push();
+    fill(75);
+    translate(1, -17, 3);
+    box(1, 37, 0.5); // Guitar string
+    pop();
+    push();
+    fill(75);
+    translate(-1.5, -17, 3);
+    box(1, 37, 0.5); // Guitar string
+    pop();
+
+    push();
+    fill(120);
+    translate(0, 0, 0);
+    box(8, 10, 5); // Guitar headstock
+    pop();
+  }
+
+  drawSatellite() {
+    push();
+    fill(180);
+    box(20, 20, 20);
+    translate(0, -12, 0);
+    box(15, 15, 15);
+    pop();
+
+    push();
+    fill(50, 50, 255);
+    translate(-18, 0, 0);
+    box(3, 30, 50); // Left panel support
+    translate(-10, 0, 0);
+    box(3, 30, 50); // Left panel
+    pop();
+
+    push();
+    fill(50, 50, 255);
+    translate(15, 0, 0);
+    box(3, 30, 50); // Right panel support
+    translate(10, 0, 0);
+    box(3, 30, 50); // Right panel
     pop();
   }
 
